@@ -55,3 +55,21 @@ func TestInvalidBase(t *testing.T) {
     if normalizeBase(base)!=base {t.Fatal("valid base rejected")}
     if _,err:=url.Parse(base);err!=nil {t.Fatal(err)}
 }
+
+func TestIngressAPIShimInjection(t *testing.T) {
+    in := `<html><head><script src="/static/main.js"></script></head><body></body></html>`
+    out := rewriteText(in, "text/html", base)
+    for _, expected := range []string{
+        `var ingressBase = "` + base + `";`,
+        `window.fetch = function`,
+        `window.XMLHttpRequest.prototype.open = function`,
+        `src="` + base + `/static/main.js"`,
+    } {
+        if !strings.Contains(out, expected) {
+            t.Errorf("missing injected ingress adapter: %s", expected)
+        }
+    }
+    if strings.Index(out, "window.fetch = function") > strings.Index(out, "static/main.js") {
+        t.Fatal("API shim was injected after HKKNX scripts")
+    }
+}

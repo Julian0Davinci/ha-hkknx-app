@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.4 — Ingress login API routing (experimental)
+- Corrects failed fresh logins through Home Assistant Ingress when HKKNX calls `/api/validate-credentials` on the Home Assistant origin instead of the HKKNX Ingress endpoint.
+- Injects a minimal client-side shim before HKKNX scripts to route same-origin `/api/...` calls made using `fetch` or `XMLHttpRequest` through the active `X-Ingress-Path` prefix.
+- Leaves other origins, already-prefixed requests, HKKNX port 8080, data and HomeKit pairings unchanged.
+- Needs a fresh-session login test in Safari private mode and the Home Assistant iOS app.
+
 ## 0.2.3 — Ingress adapter (experimental)
 - Added a separate Home Assistant Ingress adapter on port `8099`, leaving HKKNX's native interface on port `8080` unchanged.
 - Rewrites root-relative HTTP redirects such as `/projects/...` so they stay inside the authenticated Home Assistant Ingress path.

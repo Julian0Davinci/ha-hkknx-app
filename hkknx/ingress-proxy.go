@@ -69,6 +69,47 @@ func redirectLocation(original, base string) string {
     return parsed.String()
 }
 
+
+const ingressAPIShim = `<script>
+(function () {
+  "use strict";
+  // Keep API requests under the Home Assistant Ingress session URL.
+  // The prefix is populated from Supervisor's X-Ingress-Path, not hardcoded.
+  var ingressBase = "__INGRESS_BASE__";
+  function ingressURL(input) {
+    var url;
+    try { url = new URL(input, window.location.href); }
+    catch (_) { return input; }
+    if (url.origin !== window.location.origin) return input;
+    if (!url.pathname.startsWith("/api/")) return input;
+    if (url.pathname.startsWith(ingressBase + "/")) return input;
+    url.pathname = ingressBase + url.pathname;
+    return url.href;
+  }
+  if (typeof window.fetch === "function") {
+    var nativeFetch = window.fetch;
+    window.fetch = function (input, init) {
+      if (typeof input === "string" || input instanceof URL) {
+        return nativeFetch.call(this, ingressURL(String(input)), init);
+      }
+      if (input instanceof Request) {
+        var rewritten = ingressURL(input.url);
+        if (rewritten !== input.url) input = new Request(rewritten, input);
+      }
+      return nativeFetch.call(this, input, init);
+    };
+  }
+  if (window.XMLHttpRequest && window.XMLHttpRequest.prototype) {
+    var nativeOpen = window.XMLHttpRequest.prototype.open;
+    window.XMLHttpRequest.prototype.open = function (method, url) {
+      var args = Array.prototype.slice.call(arguments);
+      if (typeof url === "string") args[1] = ingressURL(url);
+      return nativeOpen.apply(this, args);
+    };
+  }
+})();
+</script>`
+
 func rewriteText(original, contentType, base string) string {
     if base == "" { return original }
     lowerType := strings.ToLower(contentType)
@@ -81,7 +122,7 @@ func rewriteText(original, contentType, base string) string {
         // Relative URLs also need a stable base after the /projects/... redirect.
         if !strings.Contains(strings.ToLower(content), "<base ") {
             content = htmlBase.ReplaceAllStringFunc(content, func(tag string) string {
-                return tag + `<base href="` + base + `/">`
+                return tag + `<base href="` + base + `/">` + strings.ReplaceAll(ingressAPIShim, "__INGRESS_BASE__", base)
             })
         }
     case strings.Contains(lowerType, "text/css"):
