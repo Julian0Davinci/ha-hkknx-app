@@ -26,8 +26,8 @@ const (
 
 var (
     ingressPath = regexp.MustCompile(`^/api/hassio_ingress/[A-Za-z0-9_-]+/?$`)
-    htmlAttributes = regexp.MustCompile(`(?i)(\b(?:href|src|action|poster|formaction|data-src)\s*=\s*["'])/([^/])`)
-    htmlUnquoted = regexp.MustCompile(`(?i)(\b(?:href|src|action|poster|formaction|data-src)\s*=\s*)/([A-Za-z0-9])`)
+    htmlAttributes = regexp.MustCompile(`(?i)(\b(?:href|src|action|poster|formaction|data-src|(?:data-)?hx-(?:get|post|put|patch|delete|push-url|replace-url))\s*=\s*["'])/([^/])`)
+    htmlUnquoted = regexp.MustCompile(`(?i)(\b(?:href|src|action|poster|formaction|data-src|(?:data-)?hx-(?:get|post|put|patch|delete|push-url|replace-url))\s*=\s*)/([A-Za-z0-9])`)
     htmlBase = regexp.MustCompile(`(?i)<head(?:\s[^>]*)?>`)
     cssURLs = regexp.MustCompile(`(?i)(url\(\s*["']?)/([^/])`)
     // Script paths: rewriting source-literal root URLs is a best-effort bridge.
@@ -81,7 +81,7 @@ const ingressAPIShim = `<script>
     try { url = new URL(input, window.location.href); }
     catch (_) { return input; }
     if (url.origin !== window.location.origin) return input;
-    if (!url.pathname.startsWith("/api/")) return input;
+    if (!url.pathname.startsWith("/api/") && !url.pathname.startsWith("/projects/")) return input;
     if (url.pathname.startsWith(ingressBase + "/")) return input;
     url.pathname = ingressBase + url.pathname;
     return url.href;

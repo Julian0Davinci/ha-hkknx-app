@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.5 — Ingress HTMX request routing (experimental)
+- Corrects root-relative `hx-get`, `hx-post`, other HTMX request attributes and their `data-hx-*` variants to remain inside the Ingress session path.
+- Extends the fetch/XMLHttpRequest Ingress shim to cover dynamically generated `/projects/...` requests as well as `/api/...`.
+- Addresses the reported diagram-fragment 404 and login URL failures. Requires live verification after installation.
+- Leaves the native HKKNX service on port 8080, the Ingress proxy on 8099, and all existing HomeKit and database data unchanged.
+
 ## 0.2.4 — Ingress login API routing (experimental)
 - Corrects failed fresh logins through Home Assistant Ingress when HKKNX calls `/api/validate-credentials` on the Home Assistant origin instead of the HKKNX Ingress endpoint.
 - Injects a minimal client-side shim before HKKNX scripts to route same-origin `/api/...` calls made using `fetch` or `XMLHttpRequest` through the active `X-Ingress-Path` prefix.

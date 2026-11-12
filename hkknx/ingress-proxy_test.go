@@ -73,3 +73,19 @@ func TestIngressAPIShimInjection(t *testing.T) {
         t.Fatal("API shim was injected after HKKNX scripts")
     }
 }
+
+func TestHTMXRewrites(t *testing.T) {
+    in := `<form hx-post="/api/validate-credentials?pid=test"><button hx-get="/projects/abc/hx-chart-container?chartId=x" hx-target="#chart">Open</button><div data-hx-get='/projects/abc/hx-status'></div><a href="/projects/abc">Go</a></form>`
+    out := rewriteText(in, "text/html", base)
+    for _, expected := range []string{
+        `hx-post="` + base + `/api/validate-credentials?pid=test"`,
+        `hx-get="` + base + `/projects/abc/hx-chart-container?chartId=x"`,
+        `data-hx-get='` + base + `/projects/abc/hx-status'`,
+        `href="` + base + `/projects/abc"`,
+    } {
+        if !strings.Contains(out, expected) { t.Errorf("missing %q in %q", expected, out) }
+    }
+    if !strings.Contains(out, `!url.pathname.startsWith("/projects/")`) {
+        t.Errorf("client-side shim must also route dynamically generated HTMX project requests")
+    }
+}
