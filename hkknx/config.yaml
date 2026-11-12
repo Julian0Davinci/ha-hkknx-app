@@ -18,4 +18,4 @@ ingress_port: 8080
 panel_icon: mdi:home-automation
 panel_title: "HKKNX"
 panel_admin: true
-webui: "http://[HOST]:8080"
+webui: "http://[HOST]:[PORT:8080]"
