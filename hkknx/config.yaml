@@ -1,7 +1,7 @@
 name: "HKKNX (Store)"
-version: "0.2.1"
+version: "0.2.2"
 slug: "hkknx"
-description: "HomeKit + KNX Bridge von brutella, mit persistenten Daten und Home-Assistant-Ingress"
+description: "HomeKit + KNX Bridge von brutella mit persistenten Daten"
 url: "https://github.com/brutella/hkknx-public"
 arch:
   - aarch64
@@ -11,12 +11,7 @@ startup: services
 boot: auto
 init: false
 host_network: true
-# /data ist das private persistente Datenvolume der App, automatisch gemountet.
-# /share wird ausschliesslich fuer den einmaligen Import der alten App gelesen.
-map:
-  - type: share
-    read_only: true
-# Konsistente Sicherung auch bei geoeffneter HKKNX-Datenbank.
+# Home Assistant Supervisor retains /data between app rebuilds and upgrades.
 backup: cold
 ingress: true
 ingress_port: 8080

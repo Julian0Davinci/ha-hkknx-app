@@ -1,21 +1,21 @@
-# HKKNX — Store-App
+# HKKNX for Home Assistant
 
-Die Datenbank und HomeKit-Pairings liegen persistent unter `/data/hkknx`. Das private `/data`-Volume bleibt bei App-Updates erhalten und wird in App-Backups aufgenommen.
+This community app runs the upstream HKKNX Docker image. The application database and HomeKit pairings are stored persistently in `/data/hkknx` and survive app restarts and updates. Back up the app before uninstalling.
 
-## Erste Installation / Umstellung von local_hkknx
+## Installation
 
-Diese App ist absichtlich **migrationsgeschützt**: beim ersten Start ohne vorhandene Daten muss `/share/hkknx-migration/.ready` mit dem Datenauszug der alten App existieren. Ansonsten startet HKKNX nicht, damit keine zweite HomeKit-Bridge-ID entsteht.
+1. Install HKKNX from this custom Home Assistant app repository.
+2. Start the app and open the HKKNX web interface on port 8080.
+3. Configure the KNX IP interface and pair the bridge with Apple Home in HKKNX.
 
-1. Alte App `local_hkknx` sichern.
-2. In der alten App einmalig den mitgelieferten Export-Patch einsetzen und starten; er legt `/share/hkknx-migration` an.
-3. Alte App stoppen.
-4. Neue Store-App installieren und starten. Sie kopiert die Daten **einmalig** nach `/data/hkknx`.
-5. KNX und HomeKit testen, erst danach den Transferordner löschen. Alte App als Rückfallmöglichkeit zunächst behalten.
+## Restoring an existing HKKNX configuration
 
-## Seitenleiste
+Use HKKNX's **built-in backup and restore** function in the HKKNX web interface. Stop the old HKKNX instance before starting the new bridge to avoid duplicate HomeKit advertisements. No custom migration folder or script is used by this app.
 
-Nach erfolgreichem Start auf der App-Info-Seite „In Seitenleiste anzeigen“ aktivieren. Ingress erwartet die Weboberfläche auf Port 8080. Der HKKNX-Webserver wurde nicht speziell auf einen Ingress-Unterpfad angepasst. Falls CSS, JavaScript oder WebSocket-Verbindungen fehlschlagen, ist ein Ingress-kompatibler Reverse-Proxy als spätere Anpassung nötig; bis dahin die direkte Weboberfläche verwenden.
+## Sidebar
 
-## Updates
+Ingress on port 8080 is configured, but compatibility of the upstream HKKNX web interface with Ingress path rewriting is not yet verified. If its pages/assets fail, use the standalone web UI and open an issue.
 
-Eine GitHub Action prüft alle 6 Stunden das Digest des Docker-Hub-Tags `brutella/hkknx:latest`. Bei Änderung wird das Dockerfile auf das Digest festgelegt und die App-Patchversion hochgezählt. Im Home-Assistant-App-Store wird anschließend nach dem nächsten Repository-Refresh ein Update angezeigt. Keine automatischen Installationen ohne Test.
+## Updates and changelog
+
+The GitHub Action checks the upstream Docker Hub `latest` digest every six hours. If it changes, the app version is bumped and the changelog receives release notes only when a matching version-tag digest and upstream GitHub release are found. Otherwise the entry explicitly says the upstream changes have not been independently identified. App updates are not installed automatically unless configured by the user.

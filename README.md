@@ -1,73 +1,37 @@
 # HKKNX – Home Assistant App
 
-Run [HKKNX by brutella](https://github.com/brutella/hkknx) directly within Home Assistant.
-
-HKKNX bridges KNX devices to Apple HomeKit, allowing compatible KNX devices to be controlled through the Apple Home app.
-
-This repository provides a community-maintained Home Assistant App package for HKKNX.
+Community-maintained Home Assistant app packaging for [HKKNX by brutella](https://github.com/brutella/hkknx-public), a KNX-to-Apple HomeKit bridge. This is not an official HKKNX or Home Assistant product.
 
 ## Features
 
-- Runs HKKNX as a Home Assistant App
-- Supports KNX-to-HomeKit bridging
-- Managed through the Home Assistant App Store
-- Persistent configuration and HomeKit pairing data
-- App version management and update notifications
-- Optional Home Assistant sidebar integration via Ingress (experimental)
-- Compatible with supported Home Assistant OS architectures
+- Fresh installations, with HKKNX's persistent database and HomeKit pairing data under `/data/hkknx`
+- Home Assistant app management and manual updates
+- An upstream Docker image digest check every six hours
+- Automatic app version bumps and a changelog entry **only** when the image digest changes
+- Official release notes included only when a version-tagged Docker image digest can be matched to the corresponding upstream release; otherwise the changelog explicitly states that details are unverified
+- Experimental Home Assistant sidebar integration via Ingress (not yet tested with upstream HKKNX)
 
-## Installation
+## Install
 
-1. Open **Home Assistant → Settings → Apps → Install App**.
-2. Open the three-dot menu and select **Repositories**.
-3. Add the following repository URL:
+1. Open **Home Assistant → Settings → Apps → Install App → ⋮ → Repositories**.
+2. Add `https://github.com/Julian0Davinci/ha-hkknx-app`.
+3. Install the **HKKNX (Store)** app and start it.
+4. Open its web interface, configure the KNX IP interface and set up Apple HomeKit pairing.
 
-   `https://github.com/Julian0Davinci/ha-hkknx-app`
+## Backups and persistence
 
-4. Find **HKKNX** in the App Store.
-5. Install the app and configure it according to your KNX network.
-6. Start the app and open its web interface to configure HKKNX.
+The persistent `/data/hkknx` folder survives normal app restarts and updates. For backup/restore of the HKKNX configuration and HomeKit identity, use **HKKNX's own backup and restore function**. Create a backup before uninstalling an app: uninstalling may delete its data.
 
-## Persistent Data
+This app does **not** bundle a custom migration script or import old Home Assistant app data. If moving from another installation, use HKKNX's built-in backup/restore function and ensure that only one bridge is running at a time.
 
-HKKNX stores its configuration, database, and HomeKit pairing information in the Home Assistant App's persistent `/data` directory.
+## Changelog and updates
 
-This data survives:
+See [`hkknx/CHANGELOG.md`](hkknx/CHANGELOG.md). The [GitHub Actions workflow](.github/workflows/sync-upstream.yml) checks `brutella/hkknx:latest` by immutable digest. A changed digest increments the **packaging** patch version and records the new digest. A matching official upstream release is linked only when verification succeeds. Otherwise the release details are explicitly marked unknown.
 
-- App restarts
-- Home Assistant restarts
-- Docker image replacements during App updates
-- Normal App upgrades
+The app's version (for example, `0.2.2`) is **not** the upstream HKKNX software version (for example, `3.2.2`).
 
-**Important:** Uninstalling the app can remove its associated data. Create a Home Assistant backup before uninstalling or migrating between installations.
+## Sidebar and support
 
-Existing installations with a different App ID require a separate data migration.
+Ingress has been configured, but its ability to display every part of the HKKNX web UI is not yet verified. If the sidebar view has issues, use the direct web interface on port 8080 and report the issue in this repository.
 
-## Updates
-
-The repository is designed to monitor the upstream HKKNX Docker image and publish new App versions when changes are detected.
-
-Once a newer App version is published, Home Assistant can offer an update through its App management interface.
-
-Updates are installed manually unless automatic App updates are enabled.
-
-## Home Assistant Sidebar
-
-The App includes experimental Home Assistant Ingress support.
-
-Depending on the upstream HKKNX web interface, additional proxy adjustments may be necessary for full sidebar functionality.
-
-The standalone web interface remains an alternative.
-
-## Credits
-
-- [brutella/hkknx](https://github.com/brutella/hkknx) – Original HKKNX project
-- [Home Assistant](https://www.home-assistant.io/) – Home automation platform
-
-This repository provides community packaging for Home Assistant and is not an official HKKNX or Home Assistant project.
-
-## Support
-
-For problems related to the Home Assistant App packaging, please open an issue in this repository.
-
-For issues related to HKKNX itself, please refer to the original upstream project.
+For HKKNX application bugs, consult [upstream releases and issues](https://github.com/brutella/hkknx-public).
