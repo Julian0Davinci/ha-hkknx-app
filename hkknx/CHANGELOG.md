@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.6 — Large KNX project uploads through Ingress
+- Enables Supervisor `ingress_stream: true` to allow KNX project uploads larger than the default 16 MiB body limit.
+- The existing Go reverse proxy forwards streamed request bodies to the unchanged native HKKNX web server on port 8080.
+- Authentication, HTMX URL rewriting, persistent database and HomeKit pairings remain unchanged.
+- Please verify the upload in Home Assistant Ingress; if the application itself has a separate file-size limit, use the native web UI.
+
 ## 0.2.5 — Ingress HTMX request routing (experimental)
 - Corrects root-relative `hx-get`, `hx-post`, other HTMX request attributes and their `data-hx-*` variants to remain inside the Ingress session path.
 - Extends the fetch/XMLHttpRequest Ingress shim to cover dynamically generated `/projects/...` requests as well as `/api/...`.

@@ -1,5 +1,5 @@
 name: "HKKNX (Store)"
-version: "0.2.5"
+version: "0.2.6"
 slug: "hkknx"
 description: "HomeKit + KNX Bridge von brutella mit persistenten Daten"
 url: "https://github.com/brutella/hkknx-public"
@@ -15,6 +15,8 @@ backup: cold
 # Use the separate Ingress adapter; keep the native HKKNX UI on 8080.
 ingress: true
 ingress_port: 8099
+# Stream large KNX .knxproj uploads instead of buffering them at the 16 MiB Supervisor limit.
+ingress_stream: true
 panel_icon: mdi:home-automation
 panel_title: "HKKNX"
 panel_admin: true
