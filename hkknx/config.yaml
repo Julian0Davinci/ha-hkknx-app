@@ -1,5 +1,5 @@
 name: "HKKNX (Store)"
-version: "0.2.0"
+version: "0.2.1"
 slug: "hkknx"
 description: "HomeKit + KNX Bridge von brutella, mit persistenten Daten und Home-Assistant-Ingress"
 url: "https://github.com/brutella/hkknx-public"
