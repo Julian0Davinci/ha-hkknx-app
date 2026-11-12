@@ -1,5 +1,5 @@
 name: "HKKNX (Store)"
-version: "0.2.2"
+version: "0.2.3"
 slug: "hkknx"
 description: "HomeKit + KNX Bridge von brutella mit persistenten Daten"
 url: "https://github.com/brutella/hkknx-public"
@@ -11,10 +11,10 @@ startup: services
 boot: auto
 init: false
 host_network: true
-# Home Assistant Supervisor retains /data between app rebuilds and upgrades.
 backup: cold
+# Use the separate Ingress adapter; keep the native HKKNX UI on 8080.
 ingress: true
-ingress_port: 8080
+ingress_port: 8099
 panel_icon: mdi:home-automation
 panel_title: "HKKNX"
 panel_admin: true

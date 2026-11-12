@@ -1,21 +1,21 @@
 # HKKNX for Home Assistant
 
-This community app runs the upstream HKKNX Docker image. The application database and HomeKit pairings are stored persistently in `/data/hkknx` and survive app restarts and updates. Back up the app before uninstalling.
+This community app runs the official upstream HKKNX Docker image. HKKNX and HomeKit pairing data persist in `/data/hkknx` and survive app updates. Create an app backup before updating or uninstalling.
 
-## Installation
+## Direct web UI
 
-1. Install HKKNX from this custom Home Assistant app repository.
-2. Start the app and open the HKKNX web interface on port 8080.
-3. Configure the KNX IP interface and pair the bridge with Apple Home in HKKNX.
+HKKNX's native web server runs on port **8080** with `host_network: true`. Use the app's **Web UI** button or `http://<HOME_ASSISTANT_IP>:8080` on your local network.
 
-## Restoring an existing HKKNX configuration
+## Home Assistant sidebar (experimental)
 
-Use HKKNX's **built-in backup and restore** function in the HKKNX web interface. Stop the old HKKNX instance before starting the new bridge to avoid duplicate HomeKit advertisements. No custom migration folder or script is used by this app.
+The app runs a separate small reverse proxy on port **8099** for Home Assistant Ingress. It uses the request header `X-Ingress-Path` and fixes root-relative redirects like `/projects/...`, common static resource paths, and cookie paths. Supervisor must be able to connect to this port. Do not expose port 8099 through a router or independent reverse proxy.
 
-## Sidebar
+Important: HKKNX does not natively support subpath hosting. Dynamically constructed URLs or client-side navigation may still fail even with the proxy. If this happens, use the **direct web UI on port 8080** and report the failing request path; do not modify the HKKNX database.
 
-Ingress on port 8080 is configured, but compatibility of the upstream HKKNX web interface with Ingress path rewriting is not yet verified. If its pages/assets fail, use the standalone web UI and open an issue.
+## Install / restore
 
-## Updates and changelog
+Start the app, configure HKKNX, and pair it with Apple Home. If moving from a previous installation, use HKKNX's **built-in backup and restore** feature. Only one HKKNX bridge instance should run at a time. This app has no custom migration code.
 
-The GitHub Action checks the upstream Docker Hub `latest` digest every six hours. If it changes, the app version is bumped and the changelog receives release notes only when a matching version-tag digest and upstream GitHub release are found. Otherwise the entry explicitly says the upstream changes have not been independently identified. App updates are not installed automatically unless configured by the user.
+## Updates
+
+The GitHub Action checks the upstream image digest every six hours. On digest changes it increments the packaging version and writes changelog entries; it includes verified release notes when available. The app is not updated automatically unless you have enabled automatic app updates.
