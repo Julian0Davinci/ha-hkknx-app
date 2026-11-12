@@ -1,0 +1,9 @@
+# Niemals HKKNX-Datenbank, HomeKit-Pairings oder Backup-Dateien einchecken!
+*.db
+*.sqlite*
+*.tar
+*.tar.gz
+*.zip
+hkknx-migration/
+__pycache__/
+.DS_Store

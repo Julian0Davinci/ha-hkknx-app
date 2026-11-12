@@ -1,0 +1,30 @@
+name: Check HKKNX Docker image
+on:
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Neues Docker-Image erkennen
+        run: python .github/scripts/check_upstream.py
+      - name: Aenderungen veroeffentlichen
+        run: |
+          if ! git diff --quiet || [ -n "$(git ls-files --others --exclude-standard)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add hkknx/config.yaml hkknx/Dockerfile .upstream-digest
+            git commit -m "chore: bump HKKNX upstream image digest"
+            git push
+          else
+            echo "Upstream unveraendert"
+          fi
