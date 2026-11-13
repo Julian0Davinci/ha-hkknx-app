@@ -197,6 +197,12 @@ func rewriteResponse(resp *http.Response) error {
     return nil
 }
 
+// normalizeUpstreamWebSocketOrigin satisfies HKKNX’s same-origin WebSocket policy.
+// Only the trusted Ingress handler can reach this reverse proxy.
+func normalizeUpstreamWebSocketOrigin(req *http.Request, upstream *url.URL) {
+    if !strings.EqualFold(req.Header.Get("Upgrade"), "websocket") { return }
+    req.Header.Set("Origin", upstream.Scheme+"://"+upstream.Host)
+}
 func newHandler() http.Handler {
     upstream, _ := url.Parse(hkknxAddress)
     proxy := httputil.NewSingleHostReverseProxy(upstream)
@@ -204,6 +210,7 @@ func newHandler() http.Handler {
     proxy.Director = func(req *http.Request) {
         originalDirector(req)
         req.Host = upstream.Host
+        normalizeUpstreamWebSocketOrigin(req, upstream)
         // Avoid upstream-compressed content when rewriting HTML, CSS and JS.
         req.Header.Del("Accept-Encoding")
     }

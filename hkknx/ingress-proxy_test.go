@@ -113,3 +113,19 @@ func TestHTMXWebSocketScheme(t *testing.T) {
     if !strings.Contains(out, "ws:"+base+"/projects/x/hx-ws-accessory-states") { t.Errorf("missing ws prefix: %s",out) }
     if !strings.Contains(out, "wss:"+base+"/projects/x/status") { t.Errorf("missing wss prefix: %s",out) }
 }
+
+func TestWebSocketOriginNormalization(t *testing.T) {
+    upstream, err := url.Parse("http://127.0.0.1:8080")
+    if err != nil { t.Fatal(err) }
+    ws, err := http.NewRequest("GET", "http://127.0.0.1:8080/projects/example/hx-ws-accessory-states", nil)
+    if err != nil { t.Fatal(err) }
+    ws.Header.Set("Upgrade", "websocket")
+    ws.Header.Set("Origin", "http://192.168.1.116:8123")
+    normalizeUpstreamWebSocketOrigin(ws, upstream)
+    if got := ws.Header.Get("Origin"); got != "http://127.0.0.1:8080" { t.Errorf("origin = %q", got) }
+    normal, err := http.NewRequest("GET", "http://127.0.0.1:8080/projects/example", nil)
+    if err != nil { t.Fatal(err) }
+    normal.Header.Set("Origin", "http://192.168.1.116:8123")
+    normalizeUpstreamWebSocketOrigin(normal, upstream)
+    if got := normal.Header.Get("Origin"); got != "http://192.168.1.116:8123" { t.Errorf("normal HTTP origin changed to %q", got) }
+}

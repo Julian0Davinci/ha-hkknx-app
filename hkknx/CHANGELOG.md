@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.9 — Fix HKKNX WebSocket Origin verification
+- HKKNX rejected Ingress WebSockets with HTTP 403 because the client Origin (Home Assistant on port 8123) did not match the proxied upstream Host (127.0.0.1:8080).
+- Normalize only WebSocket upgrade request Origin to the local upstream origin, after authenticated Supervisor Ingress access has been verified.
+- Keep the client's normal HTTP Origin untouched; preserve existing frontend adaptations, port 8080, the database, and HomeKit pairings.
+- Adds regression tests for both WebSocket and ordinary HTTP Origin handling.
+
 ## 0.2.8 — Safe JavaScript and WebSocket diagnostics
 - Stop rewriting bundled JavaScript files to prevent corruption of regex literals and minified scripts.
 - Support HTMX ws-connect values using ws:/ and wss:/ prefixes.
