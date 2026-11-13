@@ -12,6 +12,10 @@ The app runs a separate small reverse proxy on port **8099** for Home Assistant 
 
 Important: HKKNX does not natively support subpath hosting. Dynamically constructed URLs or client-side navigation may still fail even with the proxy. If this happens, use the **direct web UI on port 8080** and report the failing request path; do not modify the HKKNX database.
 
+## Live device status over Ingress
+
+Since version 0.2.7 the Ingress adapter also rewrites same-origin WebSocket URLs under `/projects/` and `/api/` and the HTMX `ws-connect` attributes. This fixes live device states showing `Laden` through the sidebar when `hx-ws-accessory-states` was contacted outside the Ingress prefix. WebSocket upgrades pass through the Go reverse proxy on port 8099. Verify after installing the update; direct access on 8080 remains available.
+
 ## Uploading large KNX projects
 
 Supervisor normally buffers Ingress requests and rejects uploads larger than 16 MiB with `Maximum request body size 16777216 exceeded`. This app enables `ingress_stream: true` (since 0.2.6), forwarding upload bodies as a stream through the Go reverse proxy. Home Assistant may send requests with chunked transfer encoding and no `Content-Length`, which the Go HTTP server supports.

@@ -26,8 +26,8 @@ const (
 
 var (
     ingressPath = regexp.MustCompile(`^/api/hassio_ingress/[A-Za-z0-9_-]+/?$`)
-    htmlAttributes = regexp.MustCompile(`(?i)(\b(?:href|src|action|poster|formaction|data-src|(?:data-)?hx-(?:get|post|put|patch|delete|push-url|replace-url))\s*=\s*["'])/([^/])`)
-    htmlUnquoted = regexp.MustCompile(`(?i)(\b(?:href|src|action|poster|formaction|data-src|(?:data-)?hx-(?:get|post|put|patch|delete|push-url|replace-url))\s*=\s*)/([A-Za-z0-9])`)
+    htmlAttributes = regexp.MustCompile(`(?i)(\b(?:href|src|action|poster|formaction|data-src|(?:data-)?hx-(?:get|post|put|patch|delete|push-url|replace-url)|(?:data-)?ws-connect)\s*=\s*["'])/([^/])`)
+    htmlUnquoted = regexp.MustCompile(`(?i)(\b(?:href|src|action|poster|formaction|data-src|(?:data-)?hx-(?:get|post|put|patch|delete|push-url|replace-url)|(?:data-)?ws-connect)\s*=\s*)/([A-Za-z0-9])`)
     htmlBase = regexp.MustCompile(`(?i)<head(?:\s[^>]*)?>`)
     cssURLs = regexp.MustCompile(`(?i)(url\(\s*["']?)/([^/])`)
     // Script paths: rewriting source-literal root URLs is a best-effort bridge.
@@ -85,6 +85,30 @@ const ingressAPIShim = `<script>
     if (url.pathname.startsWith(ingressBase + "/")) return input;
     url.pathname = ingressBase + url.pathname;
     return url.href;
+  }
+  // htmx's ws extension constructs its own WebSocket URL. Redirect it to
+  // the same authenticated Ingress session, preserving ws/wss and the query.
+  function ingressWebSocketURL(input) {
+    var url;
+    try { url = new URL(String(input), window.location.href); }
+    catch (_) { return input; }
+    if (url.protocol !== "ws:" && url.protocol !== "wss:") return input;
+    if (url.host !== window.location.host) return input;
+    if (url.pathname.startsWith(ingressBase + "/")) return input;
+    if (!url.pathname.startsWith("/projects/") && !url.pathname.startsWith("/api/")) return input;
+    url.pathname = ingressBase + url.pathname;
+    return url.href;
+  }
+  if (typeof window.WebSocket === "function") {
+    var NativeWebSocket = window.WebSocket;
+    function IngressWebSocket(url, protocols) {
+      var destination = ingressWebSocketURL(url);
+      if (arguments.length === 1) return new NativeWebSocket(destination);
+      return new NativeWebSocket(destination, protocols);
+    }
+    IngressWebSocket.prototype = NativeWebSocket.prototype;
+    Object.setPrototypeOf(IngressWebSocket, NativeWebSocket);
+    window.WebSocket = IngressWebSocket;
   }
   if (typeof window.fetch === "function") {
     var nativeFetch = window.fetch;

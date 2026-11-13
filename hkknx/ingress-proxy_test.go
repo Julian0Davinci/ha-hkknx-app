@@ -89,3 +89,22 @@ func TestHTMXRewrites(t *testing.T) {
         t.Errorf("client-side shim must also route dynamically generated HTMX project requests")
     }
 }
+
+func TestWebSocketMarkupRewrites(t *testing.T) {
+    in := `<html><head></head><body><div ws-connect="/projects/abc/hx-ws-accessory-states" data-ws-connect='/projects/abc/hx-ws-accessory-states'></div></body></html>`
+    out := rewriteText(in, "text/html", base)
+    for _, want := range []string{
+        `ws-connect="` + base + `/projects/abc/hx-ws-accessory-states"`,
+        `data-ws-connect='` + base + `/projects/abc/hx-ws-accessory-states'`,
+        `window.WebSocket = IngressWebSocket;`,
+        `url.host !== window.location.host`,
+        `url.pathname.startsWith(ingressBase + "/")`,
+    } {
+        if !strings.Contains(out, want) {
+            t.Errorf("missing WebSocket adapter element %q", want)
+        }
+    }
+    if strings.Index(out, "window.WebSocket = IngressWebSocket") > strings.Index(out, "ws-connect=") {
+        t.Fatal("WebSocket adapter must load before HTML executes its HTMX websocket extension")
+    }
+}

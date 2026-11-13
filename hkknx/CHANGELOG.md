@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.7 — Live device status over Ingress WebSockets
+- Fixes HKKNX live accessory status streams staying on `Laden` because the HTMX WebSocket connection was opened at `ws://<ha-host>:8123/projects/.../hx-ws-accessory-states` without the Ingress session prefix.
+- Adds a scoped WebSocket constructor adapter before HKKNX scripts. It rewrites same-origin `ws://` or `wss://` URLs under `/projects/` or `/api/`, and leaves external/already-prefixed destinations alone.
+- Also prefixes root-relative `ws-connect` and `data-ws-connect` markup attributes. The existing Go reverse proxy supports WebSocket upgrade requests.
+- No change to HKKNX port 8080, Ingress port 8099, database, KNX communication or HomeKit pairings.
+- Verify after updating: device status values should replace `Laden` through the Home Assistant sidebar.
+
 ## 0.2.6 — Large KNX project uploads through Ingress
 - Enables Supervisor `ingress_stream: true` to allow KNX project uploads larger than the default 16 MiB body limit.
 - The existing Go reverse proxy forwards streamed request bodies to the unchanged native HKKNX web server on port 8080.
