@@ -27,12 +27,10 @@ const (
 var (
     ingressPath = regexp.MustCompile(`^/api/hassio_ingress/[A-Za-z0-9_-]+/?$`)
     htmlAttributes = regexp.MustCompile(`(?i)(\b(?:href|src|action|poster|formaction|data-src|(?:data-)?hx-(?:get|post|put|patch|delete|push-url|replace-url)|(?:data-)?ws-connect)\s*=\s*["'])/([^/])`)
+    wsPrefixedAttributes = regexp.MustCompile(`(?i)(\b(?:data-)?ws-connect\s*=\s*["']wss?:)/([^/])`)
     htmlUnquoted = regexp.MustCompile(`(?i)(\b(?:href|src|action|poster|formaction|data-src|(?:data-)?hx-(?:get|post|put|patch|delete|push-url|replace-url)|(?:data-)?ws-connect)\s*=\s*)/([A-Za-z0-9])`)
     htmlBase = regexp.MustCompile(`(?i)<head(?:\s[^>]*)?>`)
     cssURLs = regexp.MustCompile(`(?i)(url\(\s*["']?)/([^/])`)
-    // Script paths: rewriting source-literal root URLs is a best-effort bridge.
-    // It does not alter dynamically constructed URLs or arbitrary API payloads.
-    jsRootURLs = regexp.MustCompile(`(["'\x60])/([A-Za-z0-9._~%-])`)
     cookieRoot = regexp.MustCompile(`(?i)(;\s*Path\s*=\s*)/([;\s]|$)`)
 )
 
@@ -143,6 +141,7 @@ func rewriteText(original, contentType, base string) string {
         // Rewrite first, so the injected <base> is not prefixed twice.
         content = htmlAttributes.ReplaceAllString(content, "${1}"+base+"/${2}")
         content = htmlUnquoted.ReplaceAllString(content, "${1}"+base+"/${2}")
+        content = wsPrefixedAttributes.ReplaceAllString(content, "${1}"+base+"/${2}")
         // Relative URLs also need a stable base after the /projects/... redirect.
         if !strings.Contains(strings.ToLower(content), "<base ") {
             content = htmlBase.ReplaceAllStringFunc(content, func(tag string) string {
@@ -152,7 +151,8 @@ func rewriteText(original, contentType, base string) string {
     case strings.Contains(lowerType, "text/css"):
         content = cssURLs.ReplaceAllString(content, "${1}"+base+"/${2}")
     case strings.Contains(lowerType, "javascript") || strings.Contains(lowerType, "ecmascript"):
-        content = jsRootURLs.ReplaceAllString(content, "${1}"+base+"/${2}")
+        // Never rewrite bundled JS: regex literals must stay unmodified.
+        return content
     }
     return content
 }
@@ -207,7 +207,12 @@ func newHandler() http.Handler {
         // Avoid upstream-compressed content when rewriting HTML, CSS and JS.
         req.Header.Del("Accept-Encoding")
     }
-    proxy.ModifyResponse = rewriteResponse
+    proxy.ModifyResponse = func(resp *http.Response) error {
+        if strings.EqualFold(resp.Request.Header.Get("Upgrade"), "websocket") {
+            log.Printf("HKKNX Ingress WebSocket handshake: status=%d path=%s", resp.StatusCode, resp.Request.URL.Path)
+        }
+        return rewriteResponse(resp)
+    }
     proxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
         log.Printf("Ingress proxy error: %v", err)
         http.Error(w, "HKKNX ingress proxy error", http.StatusBadGateway)
@@ -217,6 +222,9 @@ func newHandler() http.Handler {
         if normalizeBase(req.Header.Get("X-Ingress-Path")) == "" {
             http.Error(w, "Missing Ingress base path", http.StatusBadRequest)
             return
+        }
+        if strings.EqualFold(req.Header.Get("Upgrade"), "websocket") {
+            log.Printf("HKKNX Ingress WebSocket attempt: path=%s", req.URL.Path)
         }
         proxy.ServeHTTP(w, req)
     })

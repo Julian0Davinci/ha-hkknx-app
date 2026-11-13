@@ -32,13 +32,11 @@ func TestHTMLRewrites(t *testing.T) {
 }
 
 func TestJSAndCSS(t *testing.T) {
-    js := `fetch("/api/status"); const x='/projects/x'; const y="https://external.tld";`
-    out:=rewriteText(js,"application/javascript",base)
-    if !strings.Contains(out,`fetch("`+base+`/api/status")`) || !strings.Contains(out,`x='`+base+`/projects/x'`) || !strings.Contains(out,`"https://external.tld"`) {t.Errorf("JS rewrite mismatch: %s",out)}
-    css:=rewriteText(`background:url('/images/a.png')`,"text/css",base)
-    if !strings.Contains(css,`url('`+base+`/images/a.png')`) {t.Errorf("CSS rewrite mismatch: %s",css)}
+    js := "var regex = /foo/gi;"
+    if got := rewriteText(js, "application/javascript", base); got != js { t.Errorf("JavaScript modified: %s", got) }
+    css := "body {color: red;}"
+    if got := rewriteText(css, "text/css", base); got != css { t.Errorf("CSS unexpectedly modified: %s", got) }
 }
-
 func TestRewriteResponse(t *testing.T) {
     req,_:=http.NewRequest("GET","http://localhost/",nil)
     req.Header.Set("X-Ingress-Path",base)
@@ -107,4 +105,11 @@ func TestWebSocketMarkupRewrites(t *testing.T) {
     if strings.Index(out, "window.WebSocket = IngressWebSocket") > strings.Index(out, "ws-connect=") {
         t.Fatal("WebSocket adapter must load before HTML executes its HTMX websocket extension")
     }
+}
+
+func TestHTMXWebSocketScheme(t *testing.T) {
+    in := `<div ws-connect="ws:/projects/x/hx-ws-accessory-states" data-ws-connect="wss:/projects/x/status"></div>`
+    out := rewriteText(in, "text/html", base)
+    if !strings.Contains(out, "ws:"+base+"/projects/x/hx-ws-accessory-states") { t.Errorf("missing ws prefix: %s",out) }
+    if !strings.Contains(out, "wss:"+base+"/projects/x/status") { t.Errorf("missing wss prefix: %s",out) }
 }

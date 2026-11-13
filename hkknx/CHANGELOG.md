@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.8 — Safe JavaScript and WebSocket diagnostics
+- Stop rewriting bundled JavaScript files to prevent corruption of regex literals and minified scripts.
+- Support HTMX ws-connect values using ws:/ and wss:/ prefixes.
+- Log WebSocket upgrade attempts and handshake outcomes without sensitive headers or tokens.
+- Preserve HKKNX port 8080, Ingress port 8099, database and HomeKit pairing data.
+
 ## 0.2.7 — Live device status over Ingress WebSockets
 - Fixes HKKNX live accessory status streams staying on `Laden` because the HTMX WebSocket connection was opened at `ws://<ha-host>:8123/projects/.../hx-ws-accessory-states` without the Ingress session prefix.
 - Adds a scoped WebSocket constructor adapter before HKKNX scripts. It rewrites same-origin `ws://` or `wss://` URLs under `/projects/` or `/api/`, and leaves external/already-prefixed destinations alone.
