@@ -12,6 +12,10 @@ The app runs a separate small reverse proxy on port **8099** for Home Assistant 
 
 Important: HKKNX does not natively support subpath hosting. Dynamically constructed URLs or client-side navigation may still fail even with the proxy. If this happens, use the **direct web UI on port 8080** and report the failing request path; do not modify the HKKNX database.
 
+## Accessory icons
+
+Version 0.2.10 also corrects HKKNX accessory image URLs created dynamically by HTMX/WebSocket content updates. Without this adjustment, absolute `/static/img/accessory/...` image URLs are handled by Home Assistant instead of the Ingress session and yield HTTP 404. The correction is limited to same-origin accessory images and preserves the working live status WebSocket path.
+
 ## Live device status over Ingress
 
 Since version 0.2.7 the Ingress adapter also rewrites same-origin WebSocket URLs under `/projects/` and `/api/` and the HTMX `ws-connect` attributes. This fixes live device states showing `Laden` through the sidebar when `hx-ws-accessory-states` was contacted outside the Ingress prefix. WebSocket upgrades pass through the Go reverse proxy on port 8099. Verify after installing the update; direct access on 8080 remains available.

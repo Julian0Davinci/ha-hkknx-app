@@ -129,3 +129,21 @@ func TestWebSocketOriginNormalization(t *testing.T) {
     normalizeUpstreamWebSocketOrigin(normal, upstream)
     if got := normal.Header.Get("Origin"); got != "http://192.168.1.116:8123" { t.Errorf("normal HTTP origin changed to %q", got) }
 }
+
+func TestAccessoryImageDynamicIngressShim(t *testing.T) {
+    html := `<html><head></head><body><img src="/static/img/accessory/v2/active/humidity-sensor.png"></body></html>`
+    output := rewriteText(html, "text/html", base)
+    for _, want := range []string{
+        `src="` + base + `/static/img/accessory/v2/active/humidity-sensor.png"`,
+        `url.pathname.startsWith("/static/img/accessory/")`,
+        `url.pathname = ingressBase + url.pathname;`,
+        `new MutationObserver(function (mutations)`,
+        `attributeFilter: ["src"]`,
+        `document.addEventListener("error"`,
+    } {
+        if !strings.Contains(output, want) { t.Errorf("missing accessory image correction %q", want) }
+    }
+    if strings.Count(output, `src="` + base + `/static/img/accessory/`) != 1 {
+        t.Error("static HTML image path must be prefixed once")
+    }
+}

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.10 — Accessory icons inside Ingress
+- Fixes accessory icons (for example humidity-sensor.png) incorrectly requested from the Home Assistant root path `/static/img/accessory/...`, causing HTTP 404.
+- Adds a narrowly scoped browser-side correction for accessory images inserted or replaced by HTMX/WebSockets after the initial page load, observing new elements and source updates.
+- Only same-origin image URLs below `/static/img/accessory/` are adjusted; external images, other assets, WebSockets and ordinary API requests are unchanged.
+- Keep native HKKNX 8080, Ingress 8099, data and HomeKit pairings unchanged.
+
 ## 0.2.9 — Fix HKKNX WebSocket Origin verification
 - HKKNX rejected Ingress WebSockets with HTTP 403 because the client Origin (Home Assistant on port 8123) did not match the proxied upstream Host (127.0.0.1:8080).
 - Normalize only WebSocket upgrade request Origin to the local upstream origin, after authenticated Supervisor Ingress access has been verified.

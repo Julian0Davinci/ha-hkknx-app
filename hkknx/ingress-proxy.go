@@ -121,6 +121,58 @@ const ingressAPIShim = `<script>
       return nativeFetch.call(this, input, init);
     };
   }
+  // Accessory icons are often inserted by HKKNX via WebSocket/HTMX after the
+  // original HTML response. These never pass through server-side HTML rewriting.
+  // Limit image corrections to HKKNX accessory assets on this HA origin.
+  function fixAccessoryImage(img) {
+    if (!img || img.tagName !== "IMG") return;
+    var raw = img.getAttribute("src");
+    if (!raw) return;
+    var url;
+    try { url = new URL(raw, window.location.href); }
+    catch (_) { return; }
+    if (url.origin !== window.location.origin) return;
+    if (!url.pathname.startsWith("/static/img/accessory/")) return;
+    url.pathname = ingressBase + url.pathname;
+    img.setAttribute("src", url.href);
+  }
+  function fixAccessoryImages(root) {
+    if (!root || root.nodeType !== 1) return;
+    fixAccessoryImage(root);
+    if (typeof root.querySelectorAll === "function") {
+      var imgs = root.querySelectorAll("img[src]");
+      for (var i = 0; i < imgs.length; i++) fixAccessoryImage(imgs[i]);
+    }
+  }
+  // Repairs images inserted or replaced by HTMX, including WebSocket updates.
+  if (window.MutationObserver && document.documentElement) {
+    var iconObserver = new MutationObserver(function (mutations) {
+      for (var i = 0; i < mutations.length; i++) {
+        var mutation = mutations[i];
+        if (mutation.type === "attributes") {
+          fixAccessoryImage(mutation.target);
+        } else {
+          for (var j = 0; j < mutation.addedNodes.length; j++) {
+            fixAccessoryImages(mutation.addedNodes[j]);
+          }
+        }
+      }
+    });
+    iconObserver.observe(document.documentElement, {
+      childList: true, subtree: true, attributes: true, attributeFilter: ["src"]
+    });
+  }
+  // Retry already-failed images that were created before observation.
+  document.addEventListener("error", function (event) {
+    fixAccessoryImage(event.target);
+  }, true);
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", function () {
+      fixAccessoryImages(document.documentElement);
+    }, { once: true });
+  } else {
+    fixAccessoryImages(document.documentElement);
+  }
   if (window.XMLHttpRequest && window.XMLHttpRequest.prototype) {
     var nativeOpen = window.XMLHttpRequest.prototype.open;
     window.XMLHttpRequest.prototype.open = function (method, url) {
